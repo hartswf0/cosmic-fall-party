@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Fall Party</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 5s infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        .title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ffa500;
+        }
+        .moon {
+            width: 100px;
+            height: 100px;
+            background-color: #ffa500;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .moon:hover {
+            transform: scale(1.05);
+        }
+        .moon-phase {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            border-radius: 50%;
+            transition: transform 0.5s;
+        }
+        .countdown {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .oranges-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+        .orange {
+            width: 40px;
+            height: 40px;
+            background-color: #ffa500;
+            border-radius: 50%;
+            margin: 5px;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(-100vh);
+            transition: opacity 0.5s, transform 1s;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 165, 0, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 165, 0, 0); }
+        }
+        #unlockButton {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: transparent;
+            color: #ffa500;
+            border: 2px solid #ffa500;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #unlockButton:hover {
+            background-color: #ffa500;
+            color: #000;
+        }
+        #eventDetails {
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .cosmic-energy-meter {
+            width: 200px;
+            height: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .cosmic-energy-fill {
+            width: 0%;
+            height: 100%;
+            background-color: #ffa500;
+            transition: width 0.5s;
+        }
+        .lore-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1em;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 1000;
+        }
+        #moonFarmer, #frankenstein {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-size: cover;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+        #moonFarmer {
+            background-image: url('moon_farmer.png'); /* Ensure path is correct */
+            top: 10px;
+            left: 10px;
+        }
+        #frankenstein {
+            background-image: url('frankenstein.png'); /* Ensure path is correct */
+            top: 10px;
+            right: 10px;
+        }
+        #frankenVideo {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3000;
+            width: auto;
+            height: 100vh; /* Make the video fill the screen height */
+        }
+        .video-controls {
+            position: fixed;
+            bottom: 95%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            z-index: 3001;
+        }
+        .video-controls button {
+            background-color: #ffa500;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 0 5px;
+            border-radius: 5px;
+        }
+        .video-controls input[type="range"] {
+            width: 300px;
+            height: 5px;
+            background-color: #ffa500;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="stars" id="starsContainer"></div>
+        <h1 class="title">Cosmic Fall Party</h1>
+        <div class="moon" id="moon" aria-label="Click to interact with the moon">
+            <div class="moon-phase" id="moonPhase"></div>
+            <!-- Moon Farmer and Frankenstein inside the moon -->
+            <div id="moonFarmer"></div>
+            <div id="frankenstein"></div>
+        </div>
+        <div class="countdown" id="countdown" aria-live="polite"></div>
+        <div class="oranges-container" id="orangesContainer" aria-label="Cosmic Oranges"></div>
+        <button id="unlockButton" aria-label="Unlock event details">Unlock Event Details</button>
+        <div id="eventDetails">
+            <p>Date: October 19, 2024</p>
+            <p>Time: 7:00 PM</p>
+            <p>Location: 910 Taft Ave NE</p>
+        </div>
+        <div class="cosmic-energy-meter">
+            <div class="cosmic-energy-fill" id="cosmicEnergyFill"></div>
+        </div>
+    </div>
+    <div class="lore-message" id="loreMessage" role="alert"></div>
+
+    <!-- Preload video -->
+    <video id="frankenVideo" preload="auto">
+        <source src="FRANKEN.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Video controls -->
+    <div class="video-controls" id="videoControls" style="display: none;">
+        <button id="playPauseButton">⏸</button>
+        <input type="range" id="videoProgress" value="0" max="100">
+        <button id="cancelVideoButton">✖️</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const eventDate = new Date('2024-10-19T19:00:00').getTime();
+            const orangesContainer = document.getElementById('orangesContainer');
+            const moonPhase = document.getElementById('moonPhase');
+            const cosmicEnergyFill = document.getElementById('cosmicEnergyFill');
+            const loreMessage = document.getElementById('loreMessage');
+            const frankenVideo = document.getElementById('frankenVideo');
+            const videoControls = document.getElementById('videoControls');
+            const playPauseButton = document.getElementById('playPauseButton');
+            const cancelVideoButton = document.getElementById('cancelVideoButton');
+            const videoProgress = document.getElementById('videoProgress');
+            let cosmicEnergy = 0;
+            let isPlaying = true;
+
+            preloadSounds(['orange-click.mp3', 'unlock.mp3', 'moon-click.mp3']);
+
+            function preloadSounds(sounds) {
+                sounds.forEach(sound => {
+                    const audio = new Audio(sound);
+                    audio.load();
+                });
+            }
+
+            function createStars() {
+                const starsContainer = document.getElementById('starsContainer');
+                for (let i = 0; i < 100; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    star.style.width = `${Math.random() * 2}px`;
+                    star.style.height = star.style.width;
+                    star.style.left = `${Math.random() * 100}%`;
+                    star.style.top = `${Math.random() * 100}%`;
+                    star.style.animationDelay = `${Math.random() * 5}s`;
+                    starsContainer.appendChild(star);
+                }
+            }
+
+            function createOranges(count) {
+                orangesContainer.innerHTML = '';
+                for (let i = 0; i < count; i++) {
+                    const orange = document.createElement('div');
+                    orange.className = 'orange';
+                    orange.addEventListener('click', () => revealLore(orange));
+                    orangesContainer.appendChild(orange);
+                    setTimeout(() => {
+                        orange.style.opacity = 1;
+                        orange.style.transform = 'translateY(0)';
+                    }, i * 100);
+                }
+            }
+
+            function revealLore() {
+                const loreMessages = [
+                    "The moon farmer tends to cosmic citrus groves.",
+                    "Surreal oranges fuel the party's energy.",
+                    "Time bends differently in the cosmic orchard.",
+                    "The Frankenstein AI oversees the harvest.",
+                    "Each orange holds a fragment of spacetime.",
+                ];
+                const message = loreMessages[Math.floor(Math.random() * loreMessages.length)];
+                loreMessage.textContent = message;
+                loreMessage.style.opacity = 1;
+                setTimeout(() => {
+                    loreMessage.style.opacity = 0;
+                }, 3000);
+                increaseCosmicEnergy();
+                playSound('orange-click.mp3');
+            }
+
+            function updateCountdown() {
+                const now = new Date().getTime();
+                const distance = eventDate - now;
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById('countdown').innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+                const totalHours = days * 24 + hours;
+                const orangeCount = Math.min(totalHours, 24);
+                if (orangesContainer.children.length === 0) {
+                    createOranges(orangeCount);
+                }
+
+                updateMoonPhase(days);
+                updateStars(totalHours);
+
+                if (distance <= 0) {
+                    playVideo();
+                }
+            }
+
+            function updateMoonPhase(days) {
+                const phase = (days / 30) * 100;
+                moonPhase.style.transform = `translate(${phase}%, 0)`;
+            }
+
+            function updateStars(hours) {
+                const stars = document.querySelectorAll('.star');
+                const brightness = Math.min(1, (24 - hours) / 24);
+                stars.forEach(star => {
+                    star.style.opacity = brightness;
+                });
+            }
+
+            function increaseCosmicEnergy() {
+                cosmicEnergy = Math.min(100, cosmicEnergy + 10);
+                cosmicEnergyFill.style.width = `${cosmicEnergy}%`;
+                if (cosmicEnergy === 100) {
+                    playVideo();
+                }
+            }
+
+            function playVideo() {
+                frankenVideo.style.display = 'block';
+                videoControls.style.display = 'flex';
+                frankenVideo.play();
+                updateVideoProgress();
+            }
+
+            function updateVideoProgress() {
+                videoProgress.max = frankenVideo.duration;
+                setInterval(() => {
+                    videoProgress.value = frankenVideo.currentTime;
+                }, 1000);
+            }
+
+            function togglePlayPause() {
+                if (isPlaying) {
+                    frankenVideo.pause();
+                    playPauseButton.textContent = '▶️';
+                } else {
+                    frankenVideo.play();
+                    playPauseButton.textContent = '⏸️';
+                }
+                isPlaying = !isPlaying;
+            }
+
+            function cancelVideo() {
+                frankenVideo.pause();
+                frankenVideo.style.display = 'none';
+                videoControls.style.display = 'none';
+            }
+
+            playPauseButton.addEventListener('click', togglePlayPause);
+            cancelVideoButton.addEventListener('click', cancelVideo);
+            videoProgress.addEventListener('input', () => {
+                frankenVideo.currentTime = videoProgress.value;
+            });
+
+            function playSound(soundFile) {
+                const audio = new Audio(soundFile);
+                audio.play();
+            }
+
+            document.getElementById('unlockButton').addEventListener('click', function() {
+                document.getElementById('eventDetails').style.opacity = 1;
+                playSound('unlock.mp3');
+            });
+
+            document.getElementById('moon').addEventListener('click', function() {
+                playSound('moon-click.mp3');
+            });
+
+            createStars();
+            setInterval(updateCountdown, 1000);
+            updateCountdown();
+        });
+    </script>
+</body>
+</html>
